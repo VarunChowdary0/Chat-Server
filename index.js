@@ -20,12 +20,12 @@ socket.on("connection", (socket) => {
     socket.on("send_message",(data)=>{
         socket.join(data.room)
         console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.auther}`)
-        console.log(data)
+       // console.log(data)
         socket.to(data.room).emit("recive_message",data)
     })
     socket.on("join_room", (data) => {
         socket.join(data.room)
-        console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.username}`)
+     //   console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.username}`)
     });
 
     socket.on("disconnect", () => {
