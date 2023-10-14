@@ -32,7 +32,9 @@ socket.on("connection", (socket) => {
         console.log(`${socket.id} is disconnected.`);
     });
 });
-
+app.get('/',(req,res)=>{
+    res.status(200).json({'message':'online'})
+})
 server.listen(10201, () => {
     console.log("Server running on port 10201...")
 })
