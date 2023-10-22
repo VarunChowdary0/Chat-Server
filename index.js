@@ -9,6 +9,8 @@ const RoomModel = require("./modals/rooms")
 const UserModel = require("./modals/user") 
 const MyRoomsModel = require("./modals/userRooms");
 const { userInfo } = require('os');
+const helmet = require('helmet')
+
 
 mongoose.connect('mongodb+srv://custom_tan:varun_123@cluster0.epypnho.mongodb.net/Chat_DB?retryWrites=true&w=majority')
     .then((res)=>{
@@ -19,6 +21,7 @@ mongoose.connect('mongodb+srv://custom_tan:varun_123@cluster0.epypnho.mongodb.ne
     })
 
 app.use(cors());
+app.use(helmet());
 
 const server = http.createServer(app)
 const socket = new Server(server, {
@@ -204,6 +207,22 @@ app.get('/Add_a_room',(req,res)=>{
         .catch((error) => {
             console.error('Error while querying the database:', error);
         });
+})
+
+app.get('/get_length_of_room',(req,res)=>{
+    const room = req.query;
+    //console.log(room['room'])
+    RoomModel.findOne(room)
+        .then((resp)=>{
+            console.log('len')
+            if(resp){
+                res.status(200).json({"length":resp['Data'].length});
+            }
+            else{
+                console.log('Not found');
+                res.status(404).json({'length':0});
+            }
+        })
 })
 
 server.listen(10209, () => {
