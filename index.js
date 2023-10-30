@@ -8,6 +8,7 @@ const mongoose =require('mongoose')
 const RoomModel = require("./modals/rooms")
 const UserModel = require("./modals/user") 
 const MyRoomsModel = require("./modals/userRooms");
+const NotificationModel = require("./modals/notification")
 const { userInfo } = require('os');
 const helmet = require('helmet')
 
@@ -23,6 +24,7 @@ mongoose.connect('mongodb+srv://custom_tan:varun_123@cluster0.epypnho.mongodb.ne
 app.use(cors());
 app.use(helmet());
 
+let count = 0;
 const server = http.createServer(app)
 const socket = new Server(server, {
     cors: {
@@ -53,6 +55,7 @@ socket.on("connection", (socket) => {
 
 const CreateRoom = (data) =>{
     const room = data.room;
+    console.log('Function - CreateRoom  ')
     const Data = {
         'room' : room,
         'Data' : []
@@ -78,6 +81,8 @@ const CreateRoom = (data) =>{
 }
 const HandleNewMessages = (Data) => {
     const room = Data.room;
+    console.log('Function - HandleNewMessages  ')
+
     const MySchema = {
             'auther' : Data.auther,
             'message':Data.message,
@@ -102,14 +107,105 @@ const HandleNewMessages = (Data) => {
         });
 }
 
+const CreateNotificationBox = (username) =>{
+    let daa ;
+    console.log('Function - CreateNotificationBox  ')
+    MyRoomsModel.findOne({'username':username})
+    .then((resp)=>{
+        daa = resp['Data'];
+        Lens(daa,username)
+    })
+    .catch((err)=>{
+        console.log((err))
+    })
+}
+
+const Lens = (data,username) => {
+    console.log('Function - Lens ')
+    const promises = data.map((ele, ind) => {
+        return RoomModel.findOne({ 'room': ele })
+            .then((resp) => {
+                if (resp) {
+                  //  console.log(`room : ${ele}  , length: ${resp['Data'].length}`);
+                    return { 'room': ele, 'length': resp['Data'].length };
+                } else {
+                    console.log('Not found');
+                    return { 'room': ele, 'length': 0 }; // Assuming you want to return 0 if not found
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                return { 'room': ele, 'length': 0 }; // Handle the error and return 0
+            });
+    });
+
+    Promise.all(promises)
+        .then((results) => {
+            const Data = {
+                'username':username,
+                'info':results
+            }
+            //console.log(Data)
+            Appender(Data);
+        });
+    
+}
+
+
+// const Appender = (data) => {
+//     const username = data['username']
+//     const Info = data['info'];
+//     NotificationModel.findOne({'username':username})
+//         .then((resp)=>{
+//             if(resp===null){
+//                 NotificationModel.create(
+//                     {'username':username ,
+//                       'Data' : Info 
+//                     })
+//                     .then((responce)=>{
+//                         console.log(responce)
+//                     })
+//             }
+//             else{
+//                 console.log('Already there')
+//             }
+//         })
+//         .catch((err)=>{
+//             console.log("Berer: ",err);
+//         })
+// }
+
+const Appender = (data) => {
+    const username = data['username']
+    const Info = data['info'];
+    console.log('Function - Appender ')
+
+    NotificationModel.findOneAndUpdate(
+        { 'username': username },
+        { 'Data': Info },
+        { upsert: true, new: true } // Use upsert to update or insert
+    )
+    .then((resp) => {
+        //console.log('Updated or Inserted:', resp);
+    })
+    .catch((err) => {
+        console.error('Error:', err);
+    });
+}
+
 
 app.get('/',(req,res)=>{
+    count+=1;
+    const username = req.query['username']
+    console.log('get - Online Status -/ ->',count)
+    CreateNotificationBox(username)
     res.status(200).json({'message':'online'})
 })
 
 app.get('/signup',(req,res)=>{
+    count+=1;
     data= req.query;
-    console.log(data)
+    console.log('get - Signup -/signup ->',count)
     UserModel.create(data)
         .then((resi)=>{
             if(MyRooms(data.username)){
@@ -123,7 +219,9 @@ app.get('/signup',(req,res)=>{
         })
 })
 app.get('/login',(req,res)=>{
+    count+=1;
     data= req.query;
+    console.log('get - Login -/login ->',count)
     UserModel.findOne({'username':data.username,
                         'password':data.password})
         .then((responce)=>{
@@ -141,7 +239,7 @@ app.get('/login',(req,res)=>{
 })
 
 const MyRooms = (username)=>{
-    console.log('called')
+    console.log('Function - Create a user  ')
     MyRoomsModel.create({'username':username,Data:[]})
         .then((responce)=>{
             console.log(("Ok"))
@@ -154,7 +252,9 @@ const MyRooms = (username)=>{
 }
 
 app.get('/get_all_rooms', (req, res) => {
+    count+=1;
     const username = req.query.username;
+    console.log('get - All_rooms_of_user -/get_all_rooms ->',count)
     MyRoomsModel.findOne({'username':username})
         .then((resp)=>{
             res.status(200).json({'message':'OK','Data':resp['Data']})
@@ -167,8 +267,10 @@ app.get('/get_all_rooms', (req, res) => {
 
 
 app.get('/get_old_messages',(req,res)=>{
+    count+=1;
     data = req.query;
     room = data.roomID;
+    console.log('get - Old_messages -/get_old_messages ->',count)
     RoomModel.findOne({'room':room})
         .then((res_)=>{
             if(res_!==null){
@@ -187,9 +289,10 @@ app.get('/get_old_messages',(req,res)=>{
         })
 })
 
-app.get('/Add_a_room',(req,res)=>{
+app.get('/Add_a_room',(req,res)=>{    
+    count+=1;
     data = req.query;
-    console.log(data)
+    console.log('get - Add a room -/Add_a_room ->',count)
     MyRoomsModel.findOneAndUpdate(
         {'username':data.username},
         { $addToSet  : { Data : data.room}},
@@ -209,9 +312,28 @@ app.get('/Add_a_room',(req,res)=>{
         });
 })
 
-app.get('/get_length_of_room',(req,res)=>{
-    const room = req.query;
+app.get('/get_length_of_rooms',(req,res)=>{
+    const username = req.query.username;
+    count+=1;
     //console.log(room['room'])
+    //console.log(username);
+    console.log('get - all_rooms_length -/get_length_of_rooms ->',count)
+    NotificationModel.findOne({'username':username})
+        .then((resp)=>{
+            if(resp){
+                res.status(200).json(resp['Data']);
+            }
+            else{
+                console.log('Not found');
+                res.status(404).json('N A');
+            }
+        })
+})
+
+app.get('/get_length_of_room',(req,res)=>{
+    count+=1;
+    const room = req.query;
+    console.log('get - single_room_length -/get_length_of_room ->',count)
     RoomModel.findOne(room)
         .then((resp)=>{
             console.log('len')
