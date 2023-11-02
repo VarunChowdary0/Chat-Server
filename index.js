@@ -37,13 +37,13 @@ socket.on("connection", (socket) => {
     console.log(`USER CONNECTED - ${socket.id}`);
 
     socket.on("send_message",(data)=>{
-        socket.join(data.room)
+        socket.join(data.room.trim())
         console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.auther}`)
-        socket.to(data.room).emit("recive_message",data)
+        socket.to(data.room.trim()).emit("recive_message",data)
         HandleNewMessages(data)
     })
     socket.on("join_room", (data) => {
-        socket.join(data.room)
+        socket.join(data.room.trim())
         CreateRoom(data)
         console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.username}`)
     });
