@@ -347,6 +347,32 @@ app.get('/get_length_of_room',(req,res)=>{
         })
 })
 
+
+app.get('/delete_one_message',(req,res)=>{
+    count+=1;
+    const room = req.query.roomID;
+    const _id = req.query.message_ID;
+
+    RoomModel.findOneAndUpdate(
+        { "room": room, 'Data._id': _id }, 
+        { $set: { 'Data.$.message': "--DELETED--" } }, 
+        { new: true } 
+      )
+        .then(updatedRoom => {
+          if (!updatedRoom) {
+            res.status(404).json({'message':'NOT FOUND'})
+            console.log('Room or message not found');
+          } else {
+            res.status(200).json({'message':'DELETED'})
+            console.log('Message updated successfully');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          res.status(500).json({'message':err})
+        });
+})
+
 server.listen(10209, () => {
     console.log("Server running on port 10209...")
 })
