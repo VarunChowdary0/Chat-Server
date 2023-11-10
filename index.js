@@ -152,28 +152,6 @@ const Lens = (data,username) => {
 }
 
 
-// const Appender = (data) => {
-//     const username = data['username']
-//     const Info = data['info'];
-//     NotificationModel.findOne({'username':username})
-//         .then((resp)=>{
-//             if(resp===null){
-//                 NotificationModel.create(
-//                     {'username':username ,
-//                       'Data' : Info 
-//                     })
-//                     .then((responce)=>{
-//                         console.log(responce)
-//                     })
-//             }
-//             else{
-//                 console.log('Already there')
-//             }
-//         })
-//         .catch((err)=>{
-//             console.log("Berer: ",err);
-//         })
-// }
 
 const Appender = (data) => {
     const username = data['username']
