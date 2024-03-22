@@ -48,9 +48,21 @@ socket.on("connection", (socket) => {
         console.log(`User with id : ${socket.id} joined room : ${data.room} with name : ${data.username}`)
     });
 
-    socket.on("disconnect", () => {
-        console.log(`${socket.id} is disconnected.`);
+    socket.on('disconnect',()=>{
+        socket.broadcast.emit('callended')
+        console.log("Disconnected: ",socket.id)
     });
+
+    socket.on('CallUser', ({ usersIDtoCall, signalData, whoIsCaling_ID, NameOfCaller }) => {
+        console.log("Call user",NameOfCaller,usersIDtoCall,whoIsCaling_ID)
+        socket.to(usersIDtoCall).emit('CallUser', { signal: signalData, whoIsCaling_ID, NameOfCaller });
+    });
+    
+
+    socket.on('AnswerCall',(data)=>{
+        socket.to(data.to).emit("callaccepted",data.signal)
+    });
+
 });
 
 const CreateRoom = (data) =>{
